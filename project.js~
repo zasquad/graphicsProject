@@ -33,13 +33,16 @@ var vertexColors = [
 
 // Parameters controlling the size of the Robot's arm
 
-var BASE_HEIGHT      = 5.0;
-var BASE_X           = 5.0;
+var BASE_HEIGHT      = 4.0;
+var BASE_X           = 4.0;
 var BASE_Z				= 1.5;
-var LOWER_ARM_HEIGHT = 5.0;
-var LOWER_ARM_WIDTH  = 0.5;
-var UPPER_ARM_HEIGHT = 5.0;
-var UPPER_ARM_WIDTH  = 0.5;
+var HEAD_HEIGHT 		= 1.0;
+var HEAD_X 				= 1.5;
+var HEAD_Z				= .75;
+var LOWER_X 			= 0.5;
+var UPPER_ARM_X 		= 1;
+var UPPER_ARM_Y  		= 2.0;
+var UPPER_ARM_Z		= .5;
 
 // Shader transformation matrices
 
@@ -68,7 +71,7 @@ const maxViewerDist   = 10.0;
 const maxOffsetRatio  =  1.0;
 const deltaViewerDist =  0.25;
 const deltaOffset     =  0.1;
-var   eye             = vec3(2.0, 0.0, initViewerDist);
+var   eye             = vec3(2.5, 0.0, initViewerDist);
 const at              = vec3(0.0, -1.0, 0.0);
 const up              = vec3(0.0, 1.0, 0.0);
 
@@ -251,9 +254,9 @@ function torso() {
 //----------------------------------------------------------------------------
 
 
-function upperArm() {
-    var s = scale4(UPPER_ARM_WIDTH, UPPER_ARM_HEIGHT, UPPER_ARM_WIDTH);
-    var instanceMatrix = mult(translate( 0.0, 0.5 * UPPER_ARM_HEIGHT, 0.0 ),s);
+function arm() {
+    var s = scale4(UPPER_ARM_X, UPPER_ARM_Y, UPPER_ARM_Z);
+    var instanceMatrix = mult(translate( 0.0, 0.5 * UPPER_ARM_Y, 0.0 ),s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
@@ -262,10 +265,10 @@ function upperArm() {
 //----------------------------------------------------------------------------
 
 
-function lowerArm()
+function head()
 {
-    var s = scale4(LOWER_ARM_WIDTH, LOWER_ARM_HEIGHT, LOWER_ARM_WIDTH);
-    var instanceMatrix = mult( translate( 0.0, 0.5 * LOWER_ARM_HEIGHT, 0.0 ), s);
+    var s = scale4(HEAD_X, HEAD_HEIGHT, HEAD_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * HEAD_HEIGHT, 0.0 ), s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
@@ -285,14 +288,18 @@ var render = function() {
 	 modelViewMatrix  = translate(0.0, -6, 0.0);
     modelViewMatrix = mult(viewer,rotate(theta[Base], 0, 1, 0 ));
     torso();
-
-    //modelViewMatrix = mult(modelViewMatrix, translate(0.0, BASE_HEIGHT, 0.0));
-    //modelViewMatrix = mult(modelViewMatrix, rotate(theta[LowerArm], 0, 0, 1 ));
-    //lowerArm();
-
-    //modelViewMatrix  = mult(modelViewMatrix, translate(0.0, LOWER_ARM_HEIGHT, 0.0));
-    //modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
-    //upperArm();
+	
+	 //Head
+	 var beforeHead = modelViewMatrix;
+    modelViewMatrix = mult(modelViewMatrix, translate(0.0, BASE_HEIGHT, 0.0));
+    modelViewMatrix = mult(modelViewMatrix, rotate(theta[LowerArm], 0, 0, 1 ));
+    head();
+    
+    modelViewMatrix = beforeHead;
+	 //Left-Arm
+    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X/2, 2.0, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    arm();
 
     //requestAnimFrame(render);
     
