@@ -40,9 +40,12 @@ var HEAD_HEIGHT 		= 1.0;
 var HEAD_X 				= 1.5;
 var HEAD_Z				= .75;
 var LOWER_X 			= 0.5;
-var UPPER_ARM_X 		= 1;
+var UPPER_ARM_X 		= .65;
 var UPPER_ARM_Y  		= 2.0;
 var UPPER_ARM_Z		= .5;
+var lower_ARM_X 		= .5;
+var lower_ARM_Y  		= 1.0;
+var lower_ARM_Z		= .5;
 
 // Shader transformation matrices
 
@@ -55,7 +58,7 @@ var LowerArm = 1;
 var UpperArm = 2;
 
 
-var theta= [ 1, 0, 0];
+var theta= [ 0, 0, 0];
 
 var angle = 0;
 
@@ -254,9 +257,17 @@ function torso() {
 //----------------------------------------------------------------------------
 
 
-function arm() {
+function upperArm() {
     var s = scale4(UPPER_ARM_X, UPPER_ARM_Y, UPPER_ARM_Z);
-    var instanceMatrix = mult(translate( 0.0, 0.5 * UPPER_ARM_Y, 0.0 ),s);
+    var instanceMatrix = mult(translate(.5*UPPER_ARM_X, 0.5 * UPPER_ARM_Y, 0.0 ),s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
+//-----------------------------------------------------------------------------
+function lowerArm() {
+    var s = scale4(lower_ARM_X, lower_ARM_Y, lower_ARM_Z);
+    var instanceMatrix = mult(translate( .5*lower_ARM_X, 0.5 * lower_ARM_Y, 0.0 ),s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
@@ -298,8 +309,31 @@ var render = function() {
     modelViewMatrix = beforeHead;
 	 //Left-Arm
     modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X/2, 1.5, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
+    upperArm();
+    var afterLeftArm = modelViewMatrix;
+    
+    
+    modelViewMatrix = beforeHead;
+    //Upper Left-Arm
+    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X/2-.65, 1.5, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
-    arm();
+    upperArm();
+    var afterRightArm = modelViewMatrix;
+   
+    
+    //LowerLeftArm
+    modelViewMatrix = afterLeftArm;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -UPPER_ARM_Y+1, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    lowerArm();
+    
+        //lowerRightArm
+    modelViewMatrix = afterRightArm;
+    modelViewMatrix  = mult(modelViewMatrix, translate(.15, -UPPER_ARM_Y+1, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    lowerArm();
+    
 
     //requestAnimFrame(render);
     
