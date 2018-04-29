@@ -40,12 +40,24 @@ var HEAD_HEIGHT 		= 1.0;
 var HEAD_X 				= 1.5;
 var HEAD_Z				= .75;
 var LOWER_X 			= 0.5;
-var UPPER_ARM_X 		= .65;
+var UPPER_ARM_X 		= 1;
 var UPPER_ARM_Y  		= 2.0;
-var UPPER_ARM_Z		= .5;
-var lower_ARM_X 		= .5;
+var UPPER_ARM_Z		= 1;
+var lower_ARM_X 		= .75;
 var lower_ARM_Y  		= 1.0;
-var lower_ARM_Z		= .5;
+var lower_ARM_Z		= .75;
+
+var UPPER_LEG_X		= 1.15;
+var UPPER_LEG_Y		= 2.0;
+var UPPER_LEG_Z		= 1.15;
+
+var LOWER_LEG_X		= 1.05;
+var LOWER_LEG_Y		= 2.0;
+var LOWER_LEG_Z		= 1.05;
+
+var FOOT_X  			= 1.5;
+var FOOT_Y 				= .45;
+var FOOT_Z				= 1.5;
 
 // Shader transformation matrices
 
@@ -59,6 +71,7 @@ var UpperArm = 2;
 
 
 var theta= [ 0, 0, 0];
+var turnHead = false;
 
 var angle = 0;
 
@@ -74,7 +87,7 @@ const maxViewerDist   = 10.0;
 const maxOffsetRatio  =  1.0;
 const deltaViewerDist =  0.25;
 const deltaOffset     =  0.1;
-var   eye             = vec3(0, 0.0, initViewerDist);
+var   eye             = vec3(2.5, 0.0, initViewerDist);
 const at              = vec3(0.0, -1.0, 0.0);
 const up              = vec3(0.0, 1.0, 0.0);
 
@@ -259,7 +272,7 @@ function torso() {
 
 function upperArm() {
     var s = scale4(UPPER_ARM_X, UPPER_ARM_Y, UPPER_ARM_Z);
-    var instanceMatrix = mult(translate(.5*UPPER_ARM_X, 0.5 * UPPER_ARM_Y, 0.0 ),s);
+    var instanceMatrix = mult(translate(0, 0.5 * UPPER_ARM_Y, 0.0 ),s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
@@ -267,7 +280,7 @@ function upperArm() {
 //-----------------------------------------------------------------------------
 function lowerArm() {
     var s = scale4(lower_ARM_X, lower_ARM_Y, lower_ARM_Z);
-    var instanceMatrix = mult(translate( .5*lower_ARM_X, 0.5 * lower_ARM_Y, 0.0 ),s);
+    var instanceMatrix = mult(translate( 0, 0.5 * lower_ARM_Y, 0.0 ),s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
@@ -287,6 +300,39 @@ function head()
 
 //----------------------------------------------------------------------------
 
+function Upperleg()
+{
+    var s = scale4(UPPER_LEG_X, UPPER_LEG_Y, UPPER_LEG_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * UPPER_LEG_Y, 0.0 ), s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
+
+//----------------------------------------------------------------------------
+function lowerLeg()
+{
+    var s = scale4(LOWER_LEG_X, LOWER_LEG_Y, LOWER_LEG_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * LOWER_LEG_Y, 0.0 ), s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
+
+//----------------------------------------------------------------------------
+function foot()
+{
+    var s = scale4(FOOT_X, FOOT_Y, FOOT_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * FOOT_Y, 0.0 ), s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
+
+//----------------------------------------------------------------------------
+
+
+
 
 var render = function() {
 
@@ -303,12 +349,12 @@ var render = function() {
 	 //Head
 	 var beforeHead = modelViewMatrix;
     modelViewMatrix = mult(modelViewMatrix, translate(0.0, BASE_HEIGHT, 0.0));
-    modelViewMatrix = mult(modelViewMatrix, rotate(theta[LowerArm], 0, 0, 1 ));
+    modelViewMatrix = mult(modelViewMatrix, rotate(0, 50 , 50, 1 ));
     head();
     
     modelViewMatrix = beforeHead;
 	 //Left-Arm
-    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X/2, 1.5, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X-1.5, 1.5, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     upperArm();
     var afterLeftArm = modelViewMatrix;
@@ -316,7 +362,7 @@ var render = function() {
     
     modelViewMatrix = beforeHead;
     //Upper Left-Arm
-    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X/2-.65, 1.5, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X+1.5, 1.5, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     upperArm();
     var afterRightArm = modelViewMatrix;
@@ -330,11 +376,48 @@ var render = function() {
     
         //lowerRightArm
     modelViewMatrix = afterRightArm;
-    modelViewMatrix  = mult(modelViewMatrix, translate(.15, -UPPER_ARM_Y+1, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -UPPER_ARM_Y+1, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     lowerArm();
     
+    //UpperLeftLeg
+    modelViewMatrix = beforeHead;
+    modelViewMatrix  = mult(modelViewMatrix, translate(1.15, -UPPER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    Upperleg();
+    var upperLeftLeg = modelViewMatrix;
+    
+        //UpperRightLeg
+    modelViewMatrix = beforeHead;
+    modelViewMatrix  = mult(modelViewMatrix, translate(-1.15, -UPPER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    Upperleg();
+    var upperRightLeg = modelViewMatrix;
 
+
+	//LowerLeftLeg
+	modelViewMatrix = upperLeftLeg;
+	modelViewMatrix  = mult(modelViewMatrix, translate(0, -LOWER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    lowerLeg();
+    var lowerLeftLeg = modelViewMatrix;
+    	//LowerRightLeg
+	modelViewMatrix = upperRightLeg;
+	modelViewMatrix  = mult(modelViewMatrix, translate(0, -LOWER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    lowerLeg();
+    var lowerRightLeg = modelViewMatrix;
+    //LeftFoot
+    modelViewMatrix = lowerLeftLeg;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -FOOT_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    foot();
+    
+    //RightFoot
+    modelViewMatrix = lowerRightLeg;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -FOOT_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    foot();
     //requestAnimFrame(render);
     
       if (flying) {
@@ -361,6 +444,7 @@ var render = function() {
   at[0]  -= .05;
   left = false;
   }
+
   if (runAnimation || flying || right) {
     requestAnimFrame(render);
   }
