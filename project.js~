@@ -398,7 +398,7 @@ var render = function() {
     
     modelViewMatrix = beforeHead;
     //Right Arm
-    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X/2, BASE_HEIGHT*3/4, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X/2, BASE_HEIGHT*3/4, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(-theta[Shoulder], 1, 0, 0) );
     joint();
     
@@ -422,31 +422,54 @@ var render = function() {
     
     //UpperLeftLeg
     modelViewMatrix = beforeHead;
-    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X*0.3, -UPPER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X/4, 0, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(-theta[Shoulder], 1, 0, 0) );
+    joint();
+    
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -UPPER_LEG_Y*0.9, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     Upperleg();
     var upperLeftLeg = modelViewMatrix;
     
+    
+    
         //UpperRightLeg
     modelViewMatrix = beforeHead;
-    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X*0.3, -UPPER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X/4, 0, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[Shoulder], 1, 0, 0) );
+    joint();
+    
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -UPPER_LEG_Y*0.9, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     Upperleg();
     var upperRightLeg = modelViewMatrix;
 
 
-	//LowerLeftLeg
-	modelViewMatrix = upperLeftLeg;
-	modelViewMatrix  = mult(modelViewMatrix, translate(0, -LOWER_LEG_Y, 0.0));
+	 //LowerLeftLeg
+	 modelViewMatrix = upperLeftLeg;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[Shoulder], 1, 0, 0) );
+    joint();
+    
+	 modelViewMatrix  = mult(modelViewMatrix, translate(0, -LOWER_LEG_Y, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     lowerLeg();
     var lowerLeftLeg = modelViewMatrix;
+    
+    
+    
     	//LowerRightLeg
 	modelViewMatrix = upperRightLeg;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(-theta[Shoulder], 1, 0, 0) );
+    joint();
 	modelViewMatrix  = mult(modelViewMatrix, translate(0, -LOWER_LEG_Y, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     lowerLeg();
     var lowerRightLeg = modelViewMatrix;
+    
+    
+    
     //LeftFoot
     modelViewMatrix = lowerLeftLeg;
     modelViewMatrix  = mult(modelViewMatrix, translate(0, -FOOT_Y, 0.0));
