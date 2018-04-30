@@ -8,6 +8,7 @@ var runAnimation = true;
 
 var points = [];
 var colors = [];
+var texCoords = [];
 
 var vertices = [
     vec4( -0.5, -0.5,  0.5, 1.0 ),
@@ -107,21 +108,52 @@ const startEye        = vec3(0.0, 0.0, initViewerDist);
 const startAt         = vec3(0.0, 0.0, 0.0);
 
 
+// Texture parameters and variables
+var metalTexture;
+// declarations from included script
+   // metal                  // array of texels
+   // metalHeight = 256      // height of this texture
+   // metalWidth  = 256      // width of this texture
+
 //----------------------------------------------------------------------------
 
+/**
+ * Configure the texture used in this program from
+ * imageTexImg created elsewhere.
+ */
+function configureTexture() {
+    metalTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, metalTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, metalWidth, metalHeight,
+                  0, gl.RGBA, gl.UNSIGNED_BYTE, metal);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+                     gl.NEAREST_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER,
+                     gl.NEAREST_MIPMAP_LINEAR);
+}
+
+
 function quad(  a,  b,  c,  d ) {
-    colors.push(vertexColors[a]);
+    colors.push(vertexColors[6]);
     points.push(vertices[a]);
-    colors.push(vertexColors[a]);
+    texCoords.push(vec2(0.0, 1.0));
+    colors.push(vertexColors[6]);
     points.push(vertices[b]);
-    colors.push(vertexColors[a]);
+    texCoords.push(vec2(0.0, 0.0));
+    colors.push(vertexColors[6]);
     points.push(vertices[c]);
-    colors.push(vertexColors[a]);
+    texCoords.push(vec2(1.0, 0.0));
+    colors.push(vertexColors[6]);
     points.push(vertices[a]);
-    colors.push(vertexColors[a]);
+    texCoords.push(vec2(0.0, 1.0));
+    colors.push(vertexColors[6]);
     points.push(vertices[c]);
-    colors.push(vertexColors[a]);
+    texCoords.push(vec2(1.0, 0.0));
+    colors.push(vertexColors[6]);
     points.push(vertices[d]);
+    texCoords.push(vec2(1.0, 1.0));
 }
 
 
@@ -169,8 +201,11 @@ window.onload = function init() {
 
     gl.useProgram( program );
 
-    colorCube();
+    // Initialize textures
+    initmetal();
 
+    colorCube();
+    
     // Load shaders and use the resulting shader program
 
     program = initShaders( gl, "vertex-shader", "fragment-shader" );
@@ -186,6 +221,10 @@ window.onload = function init() {
     gl.vertexAttribPointer( vPosition, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vPosition );
 
+    var tBuffer = gl.createBuffer();
+    gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoords), gl.STATIC_DRAW);
+
     cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
@@ -193,6 +232,13 @@ window.onload = function init() {
     var vColor = gl.getAttribLocation( program, "vColor" );
     gl.vertexAttribPointer( vColor, 4, gl.FLOAT, false, 0, 0 );
     gl.enableVertexAttribArray( vColor );
+
+    // Configure textures and send them to the GPU
+    configureTexture();
+
+    gl.activeTexture(gl.TEXTURE0);
+    gl.bindTexture(gl.TEXTURE_2D, metalTexture);
+    gl.uniform1i(gl.getUniformLocation(program, "imageTexture"), 0);
 
 
 
