@@ -4,6 +4,8 @@ var canvas, gl, program;
 
 var NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
+var runAnimation = true;
+
 var points = [];
 var colors = [];
 
@@ -41,11 +43,15 @@ var HEAD_X 				= 1.5;
 var HEAD_Z				= .75;
 var LOWER_X 			= 0.5;
 var UPPER_ARM_X 		= 1;
-var UPPER_ARM_Y  		= 2.0;
+var UPPER_ARM_HEIGHT = 2.0;
 var UPPER_ARM_Z		= 1;
 var lower_ARM_X 		= .75;
-var lower_ARM_Y  		= 1.0;
+var lower_ARM_HEIGHT = 2.5;
 var lower_ARM_Z		= .75;
+
+var JOINT_X				= .25;
+var JOINT_Y				= .25;
+var JOINT_Z				= .25;
 
 var UPPER_LEG_X		= 1.15;
 var UPPER_LEG_Y		= 2.0;
@@ -66,11 +72,12 @@ var modelViewMatrix, projectionMatrix;
 // Array of rotation angles (in degrees) for each rotation axis
 
 var Base = 0;
-var LowerArm = 1;
-var UpperArm = 2;
+var Elbow = 1;
+var Shoulder = 2;
+var UpperArm = 3;
 
 
-var theta= [ 0, 0, 0];
+var theta= [ 0, -45.0, 0, 0];
 var turnHead = false;
 
 var angle = 0;
@@ -189,7 +196,14 @@ window.onload = function init() {
 
 
 
-
+    document.getElementById("start").onclick = function () {
+    	runAnimation = true;
+    	if(runAnimation) requestAnimFrame(render);
+    }
+    document.getElementById("stop").onclick = function () {
+    	runAnimation = false;
+    	if(runAnimation) requestAnimFrame(render);
+    }
 
 
 	    document.onkeydown = checkKey;
@@ -271,16 +285,16 @@ function torso() {
 
 
 function upperArm() {
-    var s = scale4(UPPER_ARM_X, UPPER_ARM_Y, UPPER_ARM_Z);
-    var instanceMatrix = mult(translate(0, 0.5 * UPPER_ARM_Y, 0.0 ),s);
+    var s = scale4(UPPER_ARM_X, UPPER_ARM_HEIGHT, UPPER_ARM_Z);
+    var instanceMatrix = mult(translate(0, 0.5 * UPPER_ARM_HEIGHT, 0.0 ), s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
 }
 //-----------------------------------------------------------------------------
 function lowerArm() {
-    var s = scale4(lower_ARM_X, lower_ARM_Y, lower_ARM_Z);
-    var instanceMatrix = mult(translate( 0, 0.5 * lower_ARM_Y, 0.0 ),s);
+    var s = scale4(lower_ARM_X, lower_ARM_HEIGHT, lower_ARM_Z);
+    var instanceMatrix = mult(translate( 0, 0.5 * lower_ARM_HEIGHT, 0.0 ), s);
     var t = mult(modelViewMatrix, instanceMatrix);
     gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
     gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
@@ -331,8 +345,19 @@ function foot()
 
 //----------------------------------------------------------------------------
 
+function joint()
+{
+    var s = scale4(JOINT_X, JOINT_Y, JOINT_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * JOINT_Y, 0.0 ), s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
+
+//----------------------------------------------------------------------------
 
 
+var rotateVal = 2.0;
 
 var render = function() {
 
@@ -354,42 +379,57 @@ var render = function() {
     
     modelViewMatrix = beforeHead;
 	 //Left-Arm
-    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X-1.5, 1.5, 0.0));
-    modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
+    if (theta[Shoulder] > 40 && rotateVal > 0){
+    	rotateVal = -rotateVal;
+	 }
+	 else if (theta[Shoulder] < -40 && rotateVal < 0){
+	 	rotateVal = -rotateVal;
+	 }
+	 theta[Shoulder] += rotateVal;
+    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X/2, BASE_HEIGHT*3/4, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[Shoulder], 1, 0, 0) );
+    joint();
+    
+    modelViewMatrix  = mult(modelViewMatrix, translate(UPPER_ARM_X/2, -UPPER_ARM_HEIGHT*3/4, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 1, 0, 0) );
     upperArm();
     var afterLeftArm = modelViewMatrix;
     
     
     modelViewMatrix = beforeHead;
-    //Upper Left-Arm
-    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X+1.5, 1.5, 0.0));
-    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    //Right Arm
+    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X/2, BASE_HEIGHT*3/4, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(-theta[Shoulder], 1, 0, 0) );
+    joint();
+    
+    modelViewMatrix  = mult(modelViewMatrix, translate(-UPPER_ARM_X/2, -UPPER_ARM_HEIGHT*3/4, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 1, 0, 0) );
     upperArm();
     var afterRightArm = modelViewMatrix;
    
     
     //LowerLeftArm
     modelViewMatrix = afterLeftArm;
-    modelViewMatrix  = mult(modelViewMatrix, translate(0, -UPPER_ARM_Y+1, 0.0));
-    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -lower_ARM_HEIGHT*.6, lower_ARM_Z));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[Elbow], 1, 0, 0) );
     lowerArm();
     
         //lowerRightArm
     modelViewMatrix = afterRightArm;
-    modelViewMatrix  = mult(modelViewMatrix, translate(0, -UPPER_ARM_Y+1, 0.0));
-    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -lower_ARM_HEIGHT*.6, lower_ARM_Z));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(theta[Elbow], 1, 0, 0) );
     lowerArm();
     
     //UpperLeftLeg
     modelViewMatrix = beforeHead;
-    modelViewMatrix  = mult(modelViewMatrix, translate(1.15, -UPPER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(BASE_X*0.3, -UPPER_LEG_Y, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     Upperleg();
     var upperLeftLeg = modelViewMatrix;
     
         //UpperRightLeg
     modelViewMatrix = beforeHead;
-    modelViewMatrix  = mult(modelViewMatrix, translate(-1.15, -UPPER_LEG_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(-BASE_X*0.3, -UPPER_LEG_Y, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     Upperleg();
     var upperRightLeg = modelViewMatrix;
