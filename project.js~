@@ -202,7 +202,7 @@ window.onload = function init() {
     gl.useProgram( program );
 
     // Initialize textures
-    //initmetal();
+    initmetal();
 
     colorCube();
     
