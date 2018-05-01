@@ -14,7 +14,7 @@ var texCoords = [];
 
 var groundPosition = 0;
 
-var isWallLoc;
+var isGroundLoc;
 
 var vertices = [
     vec4( -0.5, -0.5,  0.5, 1.0 ),
@@ -286,7 +286,7 @@ window.onload = function init() {
     gl.bindTexture(gl.TEXTURE_2D, grassTexture);
     gl.uniform1i(gl.getUniformLocation(program, "grassTexture"), 1);
     
-    isWallLoc        = gl.getUniformLocation(program, "isWall");
+    isGroundLoc        = gl.getUniformLocation(program, "isGround");
 
 
 
@@ -358,7 +358,7 @@ window.onload = function init() {
 
     modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
 
-    projectionMatrix = ortho(-10, 10, -10, 10, -10, 10);
+    projectionMatrix = ortho(-10, 10, -10, 10, -10, 20);
     gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),  false, flatten(projectionMatrix) );
 
     render();
@@ -466,7 +466,7 @@ var render = function() {
 
 
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-	gl.uniform1f(isWallLoc, 1.0);
+	gl.uniform1f(isGroundLoc, 0);
 	var viewer = lookAt(eye, at, up);
 
 	 modelViewMatrix  = translate(0.0, -6, 0.0);
@@ -588,7 +588,7 @@ var render = function() {
     
     
     
-    gl.uniform1f(isWallLoc, 0.0);
+    gl.uniform1f(isGroundLoc, 1);
 		    
     
     
@@ -608,7 +608,7 @@ var render = function() {
     modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, -GROUND_Z ));
     modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     terrian();    
-    groundPosition = groundPosition + .05;
+    groundPosition = groundPosition - .15;
     //requestAnimFrame(render);
     
       if (flying) {
