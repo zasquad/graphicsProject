@@ -26,14 +26,26 @@ void main()
 precision mediump float;
 varying vec2 fTexCoord;
 uniform sampler2D imageTexture;
+uniform sampler2D grassTexture;
+uniform float  isWall;
 
 void main()
 {
 
 
 	 vec4 fColor;
+	 if(isWall == 0.0)
+		{
+			fColor = texture2D(grassTexture,fTexCoord);
+			fColor.a= 1.0;
+	
+		}
+		else {
+			
+		
 	 fColor = texture2D(imageTexture, fTexCoord);
     fColor.a = 1.0;
+    }
     gl_FragColor = fColor;
 }
 </script>
@@ -42,7 +54,10 @@ void main()
 <script type="text/javascript" src="../Common/initShaders.js"></script>
 <script type="text/javascript" src="../Common/MV.js"></script>
 <script type="text/javascript" src="../Common/holeyShapes.js"></script>
+<script type="text/javascript" src="vertices.js"></script>
+<script type="text/javascript" src="patches.js"></script>
 <script type="text/javascript" src="metal.js"></script>
+<script type="text/javascript" src="grassTexture.js"></script>
 <script type="text/javascript" src="project.js"></script>
 
 <button id= "start">Start Animation</button>

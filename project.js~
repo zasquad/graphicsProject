@@ -2,6 +2,8 @@
 
 var canvas, gl, program;
 
+var numDivisions = 5;
+
 var NumVertices = 36; //(6 faces)(2 triangles/face)(3 vertices/triangle)
 
 var runAnimation = true;
@@ -9,6 +11,8 @@ var runAnimation = true;
 var points = [];
 var colors = [];
 var texCoords = [];
+
+var isWallLoc = 1.0;
 
 var vertices = [
     vec4( -0.5, -0.5,  0.5, 1.0 ),
@@ -66,6 +70,10 @@ var FOOT_X  			= 1.5;
 var FOOT_Y 				= .45;
 var FOOT_Z				= 1.5;
 
+var GROUND_X			= 15;
+var GROUND_Y			= .1;
+var GROUND_Z 			= 13;
+
 // Shader transformation matrices
 
 var modelViewMatrix, projectionMatrix;
@@ -110,12 +118,25 @@ const startAt         = vec3(0.0, 0.0, 0.0);
 
 // Texture parameters and variables
 var metalTexture;
+var grassTexture;
 // declarations from included script
    // metal                  // array of texels
    // metalHeight = 256      // height of this texture
    // metalWidth  = 256      // width of this texture
 
 //----------------------------------------------------------------------------
+
+
+var bezier = function(u) {
+    var b =new Array(4);
+    var a = 1-u;
+    b[3] = a*a*a;
+    b[2] = 3*a*a*u;
+    b[1] = 3*a*u*u;
+    b[0] = u*u*u;
+    return b;
+}
+
 
 /**
  * Configure the texture used in this program from
@@ -127,6 +148,17 @@ function configureTexture() {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, metalWidth, metalHeight,
                   0, gl.RGBA, gl.UNSIGNED_BYTE, metal);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+                     gl.NEAREST_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER,
+                     gl.NEAREST_MIPMAP_LINEAR);
+                     
+     grassTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, grassTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, grassTextWidth, grassTextHeight,
+                  0, gl.RGBA, gl.UNSIGNED_BYTE, grassText);
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
                      gl.NEAREST_MIPMAP_LINEAR);
@@ -193,6 +225,8 @@ window.onload = function init() {
 
     gl.clearColor( 0.7, 0.7, 0.7, 1.0 );
     gl.enable( gl.DEPTH_TEST );
+    
+
 
     //
     //  Load shaders and initialize attribute buffers
@@ -203,6 +237,7 @@ window.onload = function init() {
 
     // Initialize textures
     initmetal();
+    initgrassText();
 
     colorCube();
     
@@ -225,6 +260,11 @@ window.onload = function init() {
     gl.bindBuffer(gl.ARRAY_BUFFER, tBuffer);
     gl.bufferData(gl.ARRAY_BUFFER, flatten(texCoords), gl.STATIC_DRAW);
 
+    var vTexCoord = gl.getAttribLocation(program, "vTexCoord");
+    /****** Note the change to 2 for the second parameter ******/
+    gl.vertexAttribPointer(vTexCoord, 2, gl.FLOAT, false, 0, 0);
+    gl.enableVertexAttribArray(vTexCoord);
+
     cBuffer = gl.createBuffer();
     gl.bindBuffer( gl.ARRAY_BUFFER, cBuffer );
     gl.bufferData( gl.ARRAY_BUFFER, flatten(colors), gl.STATIC_DRAW );
@@ -239,6 +279,12 @@ window.onload = function init() {
     gl.activeTexture(gl.TEXTURE0);
     gl.bindTexture(gl.TEXTURE_2D, metalTexture);
     gl.uniform1i(gl.getUniformLocation(program, "imageTexture"), 0);
+    
+    gl.activeTexture(gl.TEXTURE1);
+    gl.bindTexture(gl.TEXTURE_2D, grassTexture);
+    gl.uniform1i(gl.getUniformLocation(program, "grassTexture"), 1);
+    
+    isWallLoc        = gl.getUniformLocation(program, "isWall");
 
 
 
@@ -315,7 +361,15 @@ window.onload = function init() {
 
     render();
 }
-
+//----------------------------------------------------------------------------
+function terrian()
+{
+ var s = scale4(GROUND_X, GROUND_Y, GROUND_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * BASE_HEIGHT, 0.0 ), s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv(modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
 //----------------------------------------------------------------------------
 
 
@@ -410,7 +464,7 @@ var render = function() {
 
 
     gl.clear( gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT );
-	
+	gl.uniform1f(isWallLoc, 1.0);
 	var viewer = lookAt(eye, at, up);
 
 	 modelViewMatrix  = translate(0.0, -6, 0.0);
@@ -527,6 +581,28 @@ var render = function() {
     modelViewMatrix  = mult(modelViewMatrix, translate(0, -FOOT_Y, 0.0));
     modelViewMatrix  = mult(modelViewMatrix, rotate(theta[UpperArm], 0, 0, 1) );
     foot();
+    
+    
+    
+    
+    
+    gl.uniform1f(isWallLoc, 0.0);
+    //MIDDLE
+    modelViewMatrix = beforeHead;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
+    terrian();
+    var mid = modelViewMatrix;
+    //FRONT
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, GROUND_Z));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
+    terrian();
+    //BEHIND
+    modelViewMatrix = mid;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, -GROUND_Z));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
+    terrian();    
+    
     //requestAnimFrame(render);
     
       if (flying) {
