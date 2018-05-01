@@ -41,11 +41,9 @@ void main()
 	
 		}
 		else {
-			
-		
-	 fColor = texture2D(imageTexture, fTexCoord);
-    fColor.a = 1.0;
-    }
+		 fColor = texture2D(imageTexture, fTexCoord);
+    	fColor.a = 1.0;
+   		 }
     gl_FragColor = fColor;
 }
 </script>
@@ -57,7 +55,7 @@ void main()
 <script type="text/javascript" src="vertices.js"></script>
 <script type="text/javascript" src="patches.js"></script>
 <script type="text/javascript" src="metal.js"></script>
-<script type="text/javascript" src="grassTexture.js"></script>
+<script type="text/javascript" src="grassTextureResize.js"></script>
 <script type="text/javascript" src="project.js"></script>
 
 <button id= "start">Start Animation</button>

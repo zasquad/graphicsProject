@@ -12,6 +12,8 @@ var points = [];
 var colors = [];
 var texCoords = [];
 
+var groundPosition = 0;
+
 var isWallLoc;
 
 var vertices = [
@@ -72,7 +74,7 @@ var FOOT_Z				= 1.5;
 
 var GROUND_X			= 15;
 var GROUND_Y			= .1;
-var GROUND_Z 			= 13;
+var GROUND_Z 			= 18;
 
 // Shader transformation matrices
 
@@ -154,11 +156,11 @@ function configureTexture() {
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER,
                      gl.NEAREST_MIPMAP_LINEAR);
                      
-     grassTexture = gl.createTexture();
+    grassTexture = gl.createTexture();
     gl.bindTexture(gl.TEXTURE_2D, grassTexture);
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
-    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, grassTextWidth, grassTextHeight,
-                  0, gl.RGBA, gl.UNSIGNED_BYTE, grassText);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, grassTextureResizeWidth, grassTextureResizeHeight,
+                  0, gl.RGBA, gl.UNSIGNED_BYTE, grassTextureResize);
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
                      gl.NEAREST_MIPMAP_LINEAR);
@@ -237,7 +239,7 @@ window.onload = function init() {
 
     // Initialize textures
     initmetal();
-    initgrassText();
+    initgrassTextureResize();
 
     colorCube();
     
@@ -587,9 +589,13 @@ var render = function() {
     
     
     gl.uniform1f(isWallLoc, 0.0);
+		    
+    
+    
+    
     //MIDDLE
     modelViewMatrix = beforeHead;
-    modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, 0.0));
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, groundPosition));
     modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     terrian();
     var mid = modelViewMatrix;
@@ -599,10 +605,10 @@ var render = function() {
     terrian();
     //BEHIND
     modelViewMatrix = mid;
-    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, -GROUND_Z));
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, -GROUND_Z ));
     modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     terrian();    
-    
+    groundPosition = groundPosition + .05;
     //requestAnimFrame(render);
     
       if (flying) {

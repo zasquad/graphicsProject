@@ -25,7 +25,7 @@ void main()
 
 precision mediump float;
 varying vec2 fTexCoord;
-uniform sampler2D imageTexture
+uniform sampler2D imageTexture;
 uniform sampler2D grassTexture;
 uniform float  isWall;
 
@@ -57,7 +57,7 @@ void main()
 <script type="text/javascript" src="vertices.js"></script>
 <script type="text/javascript" src="patches.js"></script>
 <script type="text/javascript" src="metal.js"></script>
-<script type="text/javascript" src="grassTexture.js"></script>
+<script type="text/javascript" src="grassTextureResize.js"></script>
 <script type="text/javascript" src="project.js"></script>
 
 <button id= "start">Start Animation</button>
