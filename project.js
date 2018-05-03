@@ -13,6 +13,8 @@ var colors = [];
 var texCoords = [];
 
 var groundPosition = 0;
+var count = 0;
+var num = 0;
 
 var isGroundLoc;
 
@@ -72,9 +74,9 @@ var FOOT_X  			= 1.5;
 var FOOT_Y 				= .45;
 var FOOT_Z				= 1.5;
 
-var GROUND_X			= 15;
+var GROUND_X			= 36;
 var GROUND_Y			= .1;
-var GROUND_Z 			= 18;
+var GROUND_Z 			= 36;
 
 // Shader transformation matrices
 
@@ -87,7 +89,7 @@ var Elbow = 1;
 var Joint = 2;
 var UpperArm = 3;
 
-
+var change;
 var theta= [ 0, -45.0, 0, 0];
 var turnHead = false;
 
@@ -469,10 +471,14 @@ var render = function() {
 	gl.uniform1f(isGroundLoc, 0);
 	var viewer = lookAt(eye, at, up);
 
-	 modelViewMatrix  = translate(0.0, -6, 0.0);
-    modelViewMatrix = mult(viewer,rotate(theta[Base], 0, 1, 0 ));
+	 modelViewMatrix  = mult(viewer,translate(0, 1, 1));
+	 modelViewMatrix  = mult(modelViewMatrix,translate(0, -6, theta[Base]));
+    modelViewMatrix = mult(viewer,rotate(0, 0, 1, 0 ));
+	 var ground = modelViewMatrix;
     torso();
-	
+	 //theta[Base]=  + 5;
+		
+		
 	 //Head
 	 var beforeHead = modelViewMatrix;
     modelViewMatrix = mult(modelViewMatrix, translate(0.0, BASE_HEIGHT, 0.0));
@@ -589,26 +595,38 @@ var render = function() {
     
     
     gl.uniform1f(isGroundLoc, 1);
-		    
-    
-    
-    
+    var offset1 = 0;
+    var offset2 = 0;
+    var offset3 = 0;
+    if(count==120)
+    {
+
+			groundPosition = 0;
+			count = 0;
+ 		
+   }
+  
+   
+   count = count + 1;
     //MIDDLE
-    modelViewMatrix = beforeHead;
-    modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, groundPosition));
+    
+    
+    modelViewMatrix = ground;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, groundPosition + offset1-(GROUND_Z/2)));
     modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     terrian();
-    var mid = modelViewMatrix;
+    //modelViewMatrix = beforeHead;
     //FRONT
     modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, GROUND_Z));
     modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     terrian();
     //BEHIND
-    modelViewMatrix = mid;
-    modelViewMatrix  = mult(modelViewMatrix, translate(0, 0, -GROUND_Z ));
-    modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
-    terrian();    
+    //modelViewMatrix = beforeHead;
+    //modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, -GROUND_Z + (offset3*num) + groundPosition));
+    //modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
+    //terrian();    
     groundPosition = groundPosition - .15;
+ 
     //requestAnimFrame(render);
     
       if (flying) {
