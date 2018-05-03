@@ -360,7 +360,7 @@ window.onload = function init() {
 
     modelViewMatrixLoc = gl.getUniformLocation(program, "modelViewMatrix");
 
-    projectionMatrix = ortho(-10, 10, -10, 10, -10, 20);
+    projectionMatrix = ortho(-10, 10, -10, 10, -10, 40);
     gl.uniformMatrix4fv( gl.getUniformLocation(program, "projectionMatrix"),  false, flatten(projectionMatrix) );
 
     render();
@@ -473,10 +473,10 @@ var render = function() {
 
 	 modelViewMatrix  = mult(viewer,translate(0, 1, 1));
 	 modelViewMatrix  = mult(modelViewMatrix,translate(0, -6, theta[Base]));
-    modelViewMatrix = mult(viewer,rotate(0, 0, 1, 0 ));
+    modelViewMatrix = mult(modelViewMatrix,rotate(0, 0, 1, 0 ));
 	 var ground = modelViewMatrix;
     torso();
-	 //theta[Base]=  + 5;
+	 theta[Base]+= 0.05;
 		
 		
 	 //Head
