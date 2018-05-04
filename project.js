@@ -78,6 +78,10 @@ var GROUND_X			= 36;
 var GROUND_Y			= .1;
 var GROUND_Z 			= 36;
 
+var WALL_X				= 1;
+var WALL_Y				= 16;
+var WALL_Z				= 5;
+
 // Shader transformation matrices
 
 var modelViewMatrix, projectionMatrix;
@@ -123,6 +127,7 @@ const startAt         = vec3(0.0, 0.0, 0.0);
 // Texture parameters and variables
 var metalTexture;
 var grassTexture;
+var brickTexture;
 // declarations from included script
    // metal                  // array of texels
    // metalHeight = 256      // height of this texture
@@ -163,6 +168,17 @@ function configureTexture() {
     gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
     gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, grassTextureResizeWidth, grassTextureResizeHeight,
                   0, gl.RGBA, gl.UNSIGNED_BYTE, grassTextureResize);
+    gl.generateMipmap(gl.TEXTURE_2D);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
+                     gl.NEAREST_MIPMAP_LINEAR);
+    gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER,
+                     gl.NEAREST_MIPMAP_LINEAR);
+					 
+	brickTexture = gl.createTexture();
+    gl.bindTexture(gl.TEXTURE_2D, brickTexture);
+    gl.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, false);
+    gl.texImage2D(gl.TEXTURE_2D, 0, gl.RGBA, brickTextWidth, brickTextWidth,
+                  0, gl.RGBA, gl.UNSIGNED_BYTE, brickText);
     gl.generateMipmap(gl.TEXTURE_2D);
     gl.texParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER,
                      gl.NEAREST_MIPMAP_LINEAR);
@@ -242,6 +258,7 @@ window.onload = function init() {
     // Initialize textures
     initmetal();
     initgrassTextureResize();
+	initbrickText();
 
     colorCube();
     
@@ -287,7 +304,11 @@ window.onload = function init() {
     gl.activeTexture(gl.TEXTURE1);
     gl.bindTexture(gl.TEXTURE_2D, grassTexture);
     gl.uniform1i(gl.getUniformLocation(program, "grassTexture"), 1);
-    
+	
+	
+    gl.activeTexture(gl.TEXTURE2);
+    gl.bindTexture(gl.TEXTURE_2D, brickTexture);
+    gl.uniform1i(gl.getUniformLocation(program, "brickTexture"), 2);
     isGroundLoc        = gl.getUniformLocation(program, "isGround");
 
 
@@ -460,6 +481,16 @@ function joint()
 
 //----------------------------------------------------------------------------
 
+function wall()
+{
+    var s = scale4(WALL_X, WALL_Y, WALL_Z);
+    var instanceMatrix = mult( translate( 0.0, 0.5 * WALL_Y, 0.0 ), s);
+    var t = mult(modelViewMatrix, instanceMatrix);
+    gl.uniformMatrix4fv( modelViewMatrixLoc,  false, flatten(t) );
+    gl.drawArrays( gl.TRIANGLES, 0, NumVertices );
+}
+//----------------------------------------------------------------------------
+
 
 var rotateVal = 2.0;
 
@@ -472,12 +503,23 @@ var render = function() {
 	var viewer = lookAt(eye, at, up);
 
 	 modelViewMatrix  = mult(viewer,translate(0, 1, 1));
-	 modelViewMatrix  = mult(modelViewMatrix,translate(0, -6, theta[Base]));
-    modelViewMatrix = mult(modelViewMatrix,rotate(0, 0, 1, 0 ));
+	 modelViewMatrix  = mult(modelViewMatrix,translate(0, -6, 0));
 	 var ground = modelViewMatrix;
+	 modelViewMatrix  = mult(modelViewMatrix,translate(0, 1, theta[Base]-30));
+    modelViewMatrix = mult(modelViewMatrix,rotate(0, 0, 1, 0 ));
+	 
     torso();
 	 theta[Base]+= 0.05;
-		
+	     if(count==1120)
+    {
+
+		theta[Base] = 0;
+ 		count = 0;
+   }
+  
+   
+   count = count + 1;
+
 		
 	 //Head
 	 var beforeHead = modelViewMatrix;
@@ -598,16 +640,7 @@ var render = function() {
     var offset1 = 0;
     var offset2 = 0;
     var offset3 = 0;
-    if(count==120)
-    {
 
-			groundPosition = 0;
-			count = 0;
- 		
-   }
-  
-   
-   count = count + 1;
     //MIDDLE
     
     
@@ -625,9 +658,40 @@ var render = function() {
     //modelViewMatrix  = mult(modelViewMatrix, translate(0, -BASE_HEIGHT/2-UPPER_LEG_Y-LOWER_LEG_Y-FOOT_Y, -GROUND_Z + (offset3*num) + groundPosition));
     //modelViewMatrix  = mult(modelViewMatrix, rotate(0, 0, 0, 1) );
     //terrian();    
-    groundPosition = groundPosition - .15;
+    //groundPosition = groundPosition - .15;
  
     //requestAnimFrame(render);
+	//Wall
+	gl.uniform1f(isGroundLoc, 2);
+    modelViewMatrix = ground;
+	var Y = -5;
+	var rotatex = -20
+	
+    modelViewMatrix  = mult(modelViewMatrix, translate(-GROUND_X/2+5,Y, -25));
+    modelViewMatrix  = mult(modelViewMatrix, rotate(rotatex, 0, 1, 0) );
+    wall();
+	var beforeWall = modelViewMatrix;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0,0, WALL_Z));
+    
+    wall();
+    
+    modelViewMatrix  = mult(modelViewMatrix, translate(0,0, WALL_Z));
+   
+    wall();
+
+    modelViewMatrix  = mult(modelViewMatrix, translate(0,0, WALL_Z));
+    
+    wall();
+	
+	 modelViewMatrix= beforeWall;
+    modelViewMatrix  = mult(modelViewMatrix, translate(0,0, -WALL_Z*1));
+    
+    wall();
+	
+    modelViewMatrix  = mult(modelViewMatrix, translate(0,0, -WALL_Z));
+    
+    wall();
+    modelViewMatrix = ground;
     
       if (flying) {
     // move viewer ahead

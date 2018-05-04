@@ -27,21 +27,26 @@ precision mediump float;
 varying vec2 fTexCoord;
 uniform sampler2D imageTexture;
 uniform sampler2D grassTexture;
-uniform bool  isGround;
+uniform sampler2D brickTexture;
+uniform float  isGround;
 
 void main()
 {
 
 
 	 vec4 fColor;
-	 if(isGround)
+	 if(isGround==1.0)
 		{
 			fColor = texture2D(grassTexture,fTexCoord);
 	
 		}
-		else {
+		else if(isGround == 0.0) {
 		 fColor = texture2D(imageTexture, fTexCoord);
    		 }
+		 else
+		 {
+		 fColor = texture2D(brickTexture, fTexCoord);
+		 }
 			fColor.a= 1.0;
     gl_FragColor = fColor;
 }
@@ -54,6 +59,7 @@ void main()
 <script type="text/javascript" src="vertices.js"></script>
 <script type="text/javascript" src="patches.js"></script>
 <script type="text/javascript" src="metal.js"></script>
+<script type="text/javascript" src="brick.js"></script>
 <script type="text/javascript" src="grassTextureResize.js"></script>
 <script type="text/javascript" src="project.js"></script>
 
