@@ -3,11 +3,17 @@
 
 <script id="vertex-shader" type="x-shader/x-vertex">
 attribute vec4 vPosition;    // vertex position
+attribute vec3 vNormal;
 attribute vec2 vTexCoord;    // texture coordinate
-varying vec4 fColor;
+
+varying vec3 fN;
+varying vec3 fE;
+varying vec3 fL;
 
 uniform mat4 modelViewMatrix;
 uniform mat4 projectionMatrix;
+uniform mat3 normal_mat;
+uniform vec4 light_position;
 
 varying vec2 fTexCoord;      // texture coordinate for fragments
 
@@ -15,7 +21,14 @@ void main()
 {
   vec4 ecPosition = modelViewMatrix * vPosition;
 
-	
+  fN = normal_mat * vNormal;
+  fE = -ecPosition.xyz;
+  if (light_position.w == 0.0) {
+    fL = light_position.xyz;
+  } else {
+    fL = light_position.xyz - ecPosition.xyz;
+  }
+
     fTexCoord = vTexCoord; // just pass through the texture coordinate
     gl_Position = projectionMatrix * ecPosition;
 }
@@ -24,6 +37,14 @@ void main()
 <script id="fragment-shader" type="x-shader/x-fragment">
 
 precision mediump float;
+
+varying vec3 fN;
+varying vec3 fL;
+varying vec3 fE;
+
+uniform vec4 ambient_product, diffuse_product, specular_product;
+uniform float shininess;
+
 varying vec2 fTexCoord;
 uniform sampler2D imageTexture;
 uniform sampler2D grassTexture;
@@ -32,20 +53,39 @@ uniform float  isGround;
 
 void main()
 {
+    vec3 N = normalize(fN);
+    vec3 E = normalize(fE);
+    vec3 L = normalize(fL);
+    vec3 H = normalize(L + E);
 
+    float Kd = max(dot(L, N), 0.0);
+    float Ks = pow(max(dot(N, H), 0.0), shininess);
+
+    vec4 ambient  = ambient_product;
+    vec4 diffuse  = Kd * diffuse_product;
+    vec4 specular = Ks * specular_product;
+    if (dot(L, N) < 0.0) {
+      specular = vec4(0.0, 0.0, 0.0, 1.0);
+    }
 
 	 vec4 fColor;
 	 if(isGround==1.0)
 		{
-			fColor = texture2D(grassTexture,fTexCoord);
-	
+			fColor = (ambient + diffuse) * texture2D(grassTexture, fTexCoord) +
+                   specular;
+      // fColor = texture2D(grassTexture, fTexCoord);
+
 		}
 		else if(isGround == 0.0) {
-		 fColor = texture2D(imageTexture, fTexCoord);
+		 fColor = (ambient + diffuse) * texture2D(imageTexture, fTexCoord) +
+                  specular;
+     // fColor = texture2D(imageTexture, fTexCoord);
    		 }
 		 else
 		 {
-		 fColor = texture2D(brickTexture, fTexCoord);
+		 fColor = (ambient + diffuse) * texture2D(brickTexture, fTexCoord) +
+                  specular;
+     // fColor = texture2D(brickTexture, fTexCoord);
 		 }
 			fColor.a= 1.0;
     gl_FragColor = fColor;
@@ -65,6 +105,13 @@ void main()
 
 <button id= "start">Start Animation</button>
 <button id= "stop">Stop Animation</button>
+<p>
+<button id= "-lightX">- Light X</button>&nbsp;&nbsp;
+<button id= "+lightX">+ Light X</button>&nbsp;&nbsp;&nbsp;&nbsp;
+<button id= "-lightY">- Light Y</button>&nbsp;&nbsp;
+<button id= "+lightY">+ Light Y</button>&nbsp;&nbsp;&nbsp;&nbsp;
+<button id= "-lightZ">- Light Z</button>&nbsp;&nbsp;
+<button id= "+lightZ">+ Light Z</button>&nbsp;&nbsp;</p>
 
 <body>
 <canvas id="gl-canvas" width="1024"" height="1024">
